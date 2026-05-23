@@ -28,7 +28,7 @@ char *hversion= "\t\t tree v2.1.1 %s 1996 - 2023 by Steve Baker and Thomas Moore
 bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
 bool qflag, Nflag, Qflag, Dflag, inodeflag, devflag, hflag, Rflag;
 bool Hflag, siflag, cflag, Xflag, Jflag, duflag, pruneflag;
-bool noindent, force_color, nocolor, xdev, noreport, nolinks;
+bool noindent, force_color, nocolor, xdev, noreport, nolinks, statsflag;
 bool ignorecase, matchdirs, fromfile, metafirst, gitignore, showinfo;
 bool reverse, fflinks;
 int flimit;
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
   aflag = dflag = fflag = lflag = pflag = sflag = Fflag = uflag = gflag = FALSE;
   Dflag = qflag = Nflag = Qflag = Rflag = hflag = Hflag = siflag = cflag = FALSE;
-  noindent = force_color = nocolor = xdev = noreport = nolinks = reverse = FALSE;
+  noindent = force_color = nocolor = xdev = noreport = nolinks = statsflag = reverse = FALSE;
   ignorecase = matchdirs = inodeflag = devflag = Xflag = Jflag = fflinks = FALSE;
   duflag = pruneflag = metafirst = gitignore = FALSE;
 
@@ -381,6 +381,11 @@ int main(int argc, char **argv)
 	      noreport = TRUE;
 	      break;
 	    }
+	    if (!strcmp("--stats",argv[i])) {
+              j = strlen(argv[i])-1;
+              statsflag = TRUE;
+              break;
+            }
 	    if (!strcmp("--nolinks",argv[i])) {
 	      j = strlen(argv[i])-1;
 	      nolinks = TRUE;
@@ -390,7 +395,7 @@ int main(int argc, char **argv)
 	      j = strlen(argv[i])-1;
 	      topsort = dirsfirst;
 	      break;
-	    }
+	    } 
 	    if (!strcmp("--filesfirst",argv[i])) {
 	      j = strlen(argv[i])-1;
 	      topsort = filesfirst;
@@ -639,6 +644,7 @@ void usage(int n)
 	"  --info        Print information about files found in .info files.\n"
 	"  --infofile X  Explicitly read info file.\n"
 	"  --noreport    Turn off file/directory count at end of tree listing.\n"
+	"  --stats       Print detailed stats: directories, files, and total size.\n"
 	"  --charset X   Use charset X for terminal/HTML and indentation line output.\n"
 	"  --filelimit # Do not descend dirs with more than # files in them.\n"
 	"  -o filename   Output to file instead of stdout.\n"

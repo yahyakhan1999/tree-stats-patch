@@ -19,7 +19,7 @@
 
 extern bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
 extern bool Dflag, Hflag, inodeflag, devflag, Rflag, duflag, pruneflag, metafirst;
-extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks;
+extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks,statsflag;
 
 extern struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err);
 extern int (*topsort)();
@@ -130,7 +130,13 @@ void emit_tree(char **dirname, bool needfulltree)
   }
 
   if (!noreport) lc.report(tot);
-
+  if (statsflag) {
+    fprintf(outfile, "\n--- Stats ---\n");
+    fprintf(outfile, "Directories : %ld\n", tot.dirs);
+    fprintf(outfile, "Files       : %ld\n", tot.files);
+    fprintf(outfile, "Total size  : %lld bytes\n", (long long)tot.size);
+  }
+  
   lc.outtro();
 }
 
