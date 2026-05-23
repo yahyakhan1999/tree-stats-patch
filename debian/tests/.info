@@ -1,0 +1,9 @@
+# This file is used for testing tree's --info parameter
+*clitest.md
+	This file contains the clitest tests.
+control
+	This is the standard autopkgtest control file
+.hidden
+	This file is used for testing tree's -a parameter
+.info
+	This file is used for testing tree's --info parameter

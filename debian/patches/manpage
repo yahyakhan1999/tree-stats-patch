@@ -1,0 +1,17 @@
+From: Florian Ernst <florian@debian.org>
+Subject: drop ellipsis from manpage to make it valid, and fix a typo
+Bug: https://gitlab.com/OldManProgrammer/unix-tree/-/issues/17
+Last-Update: 2022-12-29
+
+Index: tree/doc/tree.1
+===================================================================
+--- tree.orig/doc/tree.1
++++ tree/doc/tree.1
+@@ -16,7 +16,6 @@
+ .\" along with this program; if not, write to the Free Software
+ .\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ .\"
+-...
+ .TH TREE 1 "" "Tree 2.1.1"
+ .SH NAME
+ tree \- list contents of directories in a tree-like format.

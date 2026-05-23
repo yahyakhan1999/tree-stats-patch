@@ -1,0 +1,3 @@
+version=4
+http://oldmanprogrammer.net/tar/@PACKAGE@/ \
+    @PACKAGE@@ANY_VERSION@@ARCHIVE_EXT@

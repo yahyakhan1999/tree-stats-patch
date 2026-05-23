@@ -1,0 +1,86 @@
+From a3feae8e4aee7dd96a4c9374ab767cb63e0a3b2d Mon Sep 17 00:00:00 2001
+From: Simon Chopin <schopin@ubuntu.com>
+Date: Tue, 10 Jun 2025 18:04:25 +0200
+Subject: [PATCH v2] tree: list: call printinfo on error cases too
+
+This only needs a slight adjustment of fillinfo to do an early return
+if info is NULL, all other implementations already supporting that case.
+
+The change is necessary as the markup outputs will open an
+object in that function for the printfile function to write in.
+
+BEFORE:
+[
+  ,"name":"toto","contents":[{"error": "error opening dir"}
+  ]}
+,
+  {"type":"report","directories":0,"files":0}
+]
+
+AFTER:
+[
+  {"type":"unknown","name":"toto","contents":[{"error": "error opening dir"}
+  ]}
+,
+  {"type":"report","directories":0,"files":0}
+]
+
+V2:
+- Fix the XML printinfo to properly handle empty cases
+
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/tree/+bug/2113790
+Fixes: f210506b50 ("Version 2.0.0 (12/21/2021)")
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1118451
+Forwarded: yes
+---
+ list.c | 2 +-
+ tree.c | 2 ++
+ xml.c  | 3 ++-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/list.c b/list.c
+index 4db6e6e..298f2bd 100644
+--- a/list.c
++++ b/list.c
+@@ -94,8 +94,8 @@ void emit_tree(char **dirname, bool needfulltree)
+ 	dir = read_dir(dirname[i], &n, inf != NULL);
+       }
+ 
+-      lc.printinfo(dirname[i], info, 0);
+     } else info = NULL;
++    lc.printinfo(dirname[i], info, 0);
+ 
+     needsclosed = lc.printfile(NULL, dirname[i], info, (dir != NULL) || (!dir && n));
+     subtotal = (struct totals){0, 0, 0};
+diff --git a/tree.c b/tree.c
+index 13e8c3d..9f32db6 100644
+--- a/tree.c
++++ b/tree.c
+@@ -1492,6 +1492,8 @@ char *fillinfo(char *buf, const struct _info *ent)
+ {
+   int n;
+   buf[n=0] = 0;
++  if (!ent)
++    return buf;
+   #ifdef __USE_FILE_OFFSET64
+   if (inodeflag) n += sprintf(buf," %7lld",(long long)ent->linode);
+   #else
+diff --git a/xml.c b/xml.c
+index 766d458..05fd58d 100644
+--- a/xml.c
++++ b/xml.c
+@@ -109,7 +109,8 @@ int xml_printinfo(char *dirname, struct _info *file, int level)
+ 
+   for(t=0;ifmt[t];t++)
+     if (ifmt[t] == mt) break;
+-  fprintf(outfile,"<%s", (file->tag = ftype[t]));
++  if (file) file->tag = ftype[t];
++  fprintf(outfile,"<%s", ftype[t]);
+ 
+   return 0;
+ }
+
+base-commit: d501b58ff9cbfd64272c8cbcad0bda36a3fada06
+-- 
+2.51.0
+

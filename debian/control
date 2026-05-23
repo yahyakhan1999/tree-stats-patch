@@ -1,0 +1,19 @@
+Source: tree
+Section: utils
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Florian Ernst <florian@debian.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: http://oldmanprogrammer.net/source.php?dir=projects/tree
+Vcs-Git: https://salsa.debian.org/debian/tree-packaging.git
+Vcs-Browser: https://salsa.debian.org/debian/tree-packaging
+
+Package: tree
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: displays an indented directory tree, in color
+ Tree is a recursive directory listing command that produces a depth indented
+ listing of files, which is colorized ala dircolors if the LS_COLORS environment
+ variable is set and output is to tty.

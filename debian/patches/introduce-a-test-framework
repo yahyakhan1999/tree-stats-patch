@@ -1,0 +1,168 @@
+Origin: https://gitlab.com/OldManProgrammer/unix-tree/-/merge_requests/19/diffs
+
+From aaa78a253a8a63131c3145fb2835bced386667bb Mon Sep 17 00:00:00 2001
+From: Kenta11 <kenta@unknown>
+Date: Wed, 28 Feb 2024 22:15:37 +0900
+Subject: [PATCH] Introduce a test framework
+
+---
+ Makefile                  |  4 ++++
+ tests/L-option/.gitignore |  1 +
+ tests/L-option/exp        |  6 ++++++
+ tests/L-option/test.sh    | 14 ++++++++++++++
+ tests/Makefile            |  9 +++++++++
+ tests/init.sh             | 17 +++++++++++++++++
+ tests/no-arg/.gitignore   |  1 +
+ tests/no-arg/exp          |  9 +++++++++
+ tests/no-arg/test.sh      | 14 ++++++++++++++
+ 9 files changed, 75 insertions(+)
+ create mode 100644 tests/L-option/.gitignore
+ create mode 100644 tests/L-option/exp
+ create mode 100644 tests/L-option/test.sh
+ create mode 100644 tests/Makefile
+ create mode 100644 tests/init.sh
+ create mode 100644 tests/no-arg/.gitignore
+ create mode 100644 tests/no-arg/exp
+ create mode 100644 tests/no-arg/test.sh
+
+diff --git a/Makefile b/Makefile
+index d17cfca..d223902 100644
+--- a/Makefile
++++ b/Makefile
+@@ -101,6 +101,7 @@ $(OBJS): %.o:	%.c tree.h
+ 
+ clean:
+ 	rm -f $(TREE_DEST) *.o *~
++	make clean -C tests
+ 
+ install: tree
+ 	$(INSTALL) -d $(DESTDIR)
+@@ -113,3 +114,6 @@ distclean:
+ 
+ dist:	distclean
+ 	tar zcf ../tree-$(VERSION).tgz -C .. `cat .tarball`
++
++test:	tree
++	make -C tests
+diff --git a/tests/L-option/.gitignore b/tests/L-option/.gitignore
+new file mode 100644
+index 0000000..1fcb152
+--- /dev/null
++++ b/tests/L-option/.gitignore
+@@ -0,0 +1 @@
++out
+diff --git a/tests/L-option/exp b/tests/L-option/exp
+new file mode 100644
+index 0000000..37a6554
+--- /dev/null
++++ b/tests/L-option/exp
+@@ -0,0 +1,6 @@
++.
++├── a
++├── b
++└── d
++
++4 directories, 0 files
+diff --git a/tests/L-option/test.sh b/tests/L-option/test.sh
+new file mode 100644
+index 0000000..9864bd7
+--- /dev/null
++++ b/tests/L-option/test.sh
+@@ -0,0 +1,14 @@
++#!/usr/bin/env bash
++# -*- coding: utf-8 -*-
++
++home=$(cd $(dirname $0) && pwd)
++. ${home}/../init.sh
++
++mkdir -p $target_directory
++cd $target_directory
++
++mkdir -p a b/c d/e/f
++$tree -L 1 > ${home}/out
++
++cmp ${home}/{exp,out} || result=1
++print_result ${test_name} ${result}
+diff --git a/tests/Makefile b/tests/Makefile
+new file mode 100644
+index 0000000..7c52f39
+--- /dev/null
++++ b/tests/Makefile
+@@ -0,0 +1,9 @@
++entries = no-arg L-option
++
++all:
++	@echo "***** tests are launched ******"
++	@for entry in $(entries); do bash $${entry}/test.sh; done
++	@echo "***** tests were finished ******"
++
++clean:
++	@for entry in $(entries); do rm -f $${entry}/out; done
+diff --git a/tests/init.sh b/tests/init.sh
+new file mode 100644
+index 0000000..ab31ac2
+--- /dev/null
++++ b/tests/init.sh
+@@ -0,0 +1,17 @@
++#!/usr/bin/env bash
++# -*- coding: utf-8 -*-
++
++root=${home}/../..
++tree=${root}/tree
++test_name=$(basename ${home})
++target_directory=/tmp/tree/${test_name}
++
++# $1: test name
++# $2: test result (0->success, 1->failure)
++print_result () {
++  if [ -z $2 ] || [ $2 -eq 0 ]; then
++    echo "SUCCESS:" $1
++  else
++    echo "FAILURE:" $1
++  fi
++}
+diff --git a/tests/no-arg/.gitignore b/tests/no-arg/.gitignore
+new file mode 100644
+index 0000000..1fcb152
+--- /dev/null
++++ b/tests/no-arg/.gitignore
+@@ -0,0 +1 @@
++out
+diff --git a/tests/no-arg/exp b/tests/no-arg/exp
+new file mode 100644
+index 0000000..2bd7f50
+--- /dev/null
++++ b/tests/no-arg/exp
+@@ -0,0 +1,9 @@
++.
++├── a
++├── b
++│   └── c
++└── d
++    └── e
++        └── f
++
++7 directories, 0 files
+diff --git a/tests/no-arg/test.sh b/tests/no-arg/test.sh
+new file mode 100644
+index 0000000..5a993be
+--- /dev/null
++++ b/tests/no-arg/test.sh
+@@ -0,0 +1,14 @@
++#!/usr/bin/env bash
++# -*- coding: utf-8 -*-
++
++home=$(cd $(dirname $0) && pwd)
++. ${home}/../init.sh
++
++mkdir -p $target_directory
++cd $target_directory
++
++mkdir -p a b/c d/e/f
++$tree > ${home}/out
++
++cmp ${home}/{exp,out} || result=1
++print_result ${test_name} ${result}
+-- 
+2.43.0
+

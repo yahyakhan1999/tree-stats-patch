@@ -1,0 +1,2 @@
+Test-Command: clitest --pre-flight 'export LC_ALL=C' debian/tests/clitest.md
+Depends: @, clitest
