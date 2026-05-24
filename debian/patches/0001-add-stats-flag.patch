@@ -1,10 +1,142 @@
-From: Yahya Khan <yahya.b.khan@gmail.ca>
-Subject: Add --stats flag to display directory statistics
-Bug: https://github.com/yahyakhan1999/tree-stats-patch
-Last-Update: 2026-05-23
----
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..59a4995
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,40 @@
++# tree --stats patch
++
++A patch for the `tree` utility (v2.1.1) that adds a `--stats` flag to display
++detailed directory statistics after the tree listing.
++
++## What it does
++
++Running `tree --stats` appends a stats summary to the normal tree output:
++
++--- Stats ---
++Directories : 9
++Files       : 55
++Total size  : 794440 bytes
++
++## Why
++
++The existing `tree` output shows a basic summary line like:
++`9 directories, 55 files`
++
++This patch extends that with total size on disk, useful for quickly
++auditing directory contents without running a separate `du` command.
++
++## Files changed
++
++- `tree.c` — added `statsflag` bool, `--stats` argument parsing, help text
++- `list.c` — added stats output block after `lc.report(tot)`
++
++## How to build
++
++```bash
++apt source tree
++cd tree-2.1.1
++patch -p1 < 0001-add-stats-flag.patch
++make
++./tree --stats
++```
++
++## Patch
++
++See `0001-add-stats-flag.patch` for the full diff.
+diff --git a/debian/patches/0001-add-stats-flag.patch b/debian/patches/0001-add-stats-flag.patch
+new file mode 100644
+index 0000000..adae990
+--- /dev/null
++++ b/debian/patches/0001-add-stats-flag.patch
+@@ -0,0 +1,76 @@
++From: Yahya Khan <yahya.b.khan@gmail.ca>
++Subject: Add --stats flag with hidden files, newest/oldest file tracking
++Bug: https://github.com/yahyakhan1999/tree-stats-patch
++Last-Update: 2026-05-23
++---
++diff --git a/list.c b/list.c
++index 818a3d7..627b072 100644
++--- a/list.c
+++++ b/list.c
++@@ -19,7 +19,7 @@
++ 
++ extern bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
++ extern bool Dflag, Hflag, inodeflag, devflag, Rflag, duflag, pruneflag, metafirst;
++-extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks;
+++extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks,statsflag;
++ 
++ extern struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err);
++ extern int (*topsort)();
++@@ -130,7 +130,13 @@ void emit_tree(char **dirname, bool needfulltree)
++   }
++ 
++   if (!noreport) lc.report(tot);
++-
+++  if (statsflag) {
+++    fprintf(outfile, "\n--- Stats ---\n");
+++    fprintf(outfile, "Directories : %ld\n", tot.dirs);
+++    fprintf(outfile, "Files       : %ld\n", tot.files);
+++    fprintf(outfile, "Total size  : %lld bytes\n", (long long)tot.size);
+++  }
+++  
++   lc.outtro();
++ }
++ 
++diff --git a/tree.c b/tree.c
++index 2cf6baf..720c229 100644
++--- a/tree.c
+++++ b/tree.c
++@@ -28,7 +28,7 @@ char *hversion= "\t\t tree v2.1.1 %s 1996 - 2023 by Steve Baker and Thomas Moore
++ bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
++ bool qflag, Nflag, Qflag, Dflag, inodeflag, devflag, hflag, Rflag;
++ bool Hflag, siflag, cflag, Xflag, Jflag, duflag, pruneflag;
++-bool noindent, force_color, nocolor, xdev, noreport, nolinks;
+++bool noindent, force_color, nocolor, xdev, noreport, nolinks, statsflag;
++ bool ignorecase, matchdirs, fromfile, metafirst, gitignore, showinfo;
++ bool reverse, fflinks;
++ int flimit;
++@@ -133,7 +133,7 @@ int main(int argc, char **argv)
++ 
++   aflag = dflag = fflag = lflag = pflag = sflag = Fflag = uflag = gflag = FALSE;
++   Dflag = qflag = Nflag = Qflag = Rflag = hflag = Hflag = siflag = cflag = FALSE;
++-  noindent = force_color = nocolor = xdev = noreport = nolinks = reverse = FALSE;
+++  noindent = force_color = nocolor = xdev = noreport = nolinks = statsflag = reverse = FALSE;
++   ignorecase = matchdirs = inodeflag = devflag = Xflag = Jflag = fflinks = FALSE;
++   duflag = pruneflag = metafirst = gitignore = FALSE;
++ 
++@@ -381,6 +381,11 @@ int main(int argc, char **argv)
++ 	      noreport = TRUE;
++ 	      break;
++ 	    }
+++	    if (!strcmp("--stats",argv[i])) {
+++              j = strlen(argv[i])-1;
+++              statsflag = TRUE;
+++              break;
+++            }
++ 	    if (!strcmp("--nolinks",argv[i])) {
++ 	      j = strlen(argv[i])-1;
++ 	      nolinks = TRUE;
++@@ -390,7 +395,7 @@ int main(int argc, char **argv)
++ 	      j = strlen(argv[i])-1;
++ 	      topsort = dirsfirst;
++ 	      break;
++-	    }
+++	    } 
++ 	    if (!strcmp("--filesfirst",argv[i])) {
++ 	      j = strlen(argv[i])-1;
++ 	      topsort = filesfirst;
+diff --git a/debian/patches/series b/debian/patches/series
+index 3ed03cc..fd55972 100644
+--- a/debian/patches/series
++++ b/debian/patches/series
+@@ -1,3 +1,4 @@
+ manpage
+ introduce-a-test-framework
+ 0001-tree-list-call-printinfo-on-error-cases-too.patch
++0001-add-stats-flag.patch
 diff --git a/list.c b/list.c
-index 818a3d7..627b072 100644
+index 818a3d7..0ec779e 100644
 --- a/list.c
 +++ b/list.c
 @@ -19,7 +19,7 @@
@@ -16,23 +148,76 @@ index 818a3d7..627b072 100644
  
  extern struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err);
  extern int (*topsort)();
-@@ -130,7 +130,13 @@ void emit_tree(char **dirname, bool needfulltree)
+@@ -119,10 +119,18 @@ void emit_tree(char **dirname, bool needfulltree)
+     }
+     if (needsclosed) lc.close(info, 0, dirname[i+1] != NULL);
+ 
+-    tot.files += subtotal.files;
++   tot.files += subtotal.files;
+     tot.dirs += subtotal.dirs;
+     tot.size += subtotal.size;
+-//     if (duflag) tot.size = info->size;
++    tot.hidden += subtotal.hidden;
++    if (subtotal.newest_time > tot.newest_time) {
++      tot.newest_time = subtotal.newest_time;
++      strncpy(tot.newest_name, subtotal.newest_name, 255);
++    }
++    if (tot.oldest_time == 0 || (subtotal.oldest_time && subtotal.oldest_time < tot.oldest_time)) {
++      tot.oldest_time = subtotal.oldest_time;
++      strncpy(tot.oldest_name, subtotal.oldest_name, 255);
++    }//     if (duflag) tot.size = info->size;
+ //     else tot.size += st.st_size;
+ 
+     if (ig != NULL) ig = pop_filterstack();
+@@ -130,7 +138,24 @@ void emit_tree(char **dirname, bool needfulltree)
    }
  
    if (!noreport) lc.report(tot);
 -
 +  if (statsflag) {
++   char newest[32], oldest[32];    struct tm *tm;
 +    fprintf(outfile, "\n--- Stats ---\n");
 +    fprintf(outfile, "Directories : %ld\n", tot.dirs);
 +    fprintf(outfile, "Files       : %ld\n", tot.files);
++    fprintf(outfile, "Hidden      : %ld\n", tot.hidden);
 +    fprintf(outfile, "Total size  : %lld bytes\n", (long long)tot.size);
-+  }
-+  
++    if (tot.newest_time) {
++      tm = localtime(&tot.newest_time);
++      strftime(newest, sizeof(newest), "%Y-%m-%d", tm);
++      fprintf(outfile, "Newest file : %s (%s)\n", tot.newest_name, newest);
++    }
++    if (tot.oldest_time) {
++      tm = localtime(&tot.oldest_time);
++      strftime(oldest, sizeof(oldest), "%Y-%m-%d", tm);
++      fprintf(outfile, "Oldest file : %s (%s)\n", tot.oldest_name, oldest);
++    }
++  }  
    lc.outtro();
  }
  
+@@ -239,8 +264,18 @@ struct totals listdir(char *dirname, struct _info **dir, int lev, dev_t dev, boo
+ 	  if (subdir == NULL) descend = 0;
+ 	}
+       }
+-    } else tot.files++;
+-
++    } else {
++      tot.files++;
++      if ((*dir)->name[0] == '.') tot.hidden++;
++      if (tot.newest_time == 0 || (*dir)->mtime > tot.newest_time) {
++        tot.newest_time = (*dir)->mtime;
++        strncpy(tot.newest_name, (*dir)->name, 255);
++      }
++      if (tot.oldest_time == 0 || (*dir)->mtime < tot.oldest_time) {
++        tot.oldest_time = (*dir)->mtime;
++        strncpy(tot.oldest_name, (*dir)->name, 255);
++      }
++    }
+     needsclosed = lc.printfile(dirname, filename, *dir, descend + htmldescend + (Jflag && errors));
+     if (err) lc.error(err);
+ 
 diff --git a/tree.c b/tree.c
-index 2cf6baf..720c229 100644
+index 2cf6baf..a238cce 100644
 --- a/tree.c
 +++ b/tree.c
 @@ -28,7 +28,7 @@ char *hversion= "\t\t tree v2.1.1 %s 1996 - 2023 by Steve Baker and Thomas Moore
@@ -74,3 +259,27 @@ index 2cf6baf..720c229 100644
  	    if (!strcmp("--filesfirst",argv[i])) {
  	      j = strlen(argv[i])-1;
  	      topsort = filesfirst;
+@@ -639,6 +644,7 @@ void usage(int n)
+ 	"  --info        Print information about files found in .info files.\n"
+ 	"  --infofile X  Explicitly read info file.\n"
+ 	"  --noreport    Turn off file/directory count at end of tree listing.\n"
++	"  --stats       Print detailed stats: directories, files, and total size.\n"
+ 	"  --charset X   Use charset X for terminal/HTML and indentation line output.\n"
+ 	"  --filelimit # Do not descend dirs with more than # files in them.\n"
+ 	"  -o filename   Output to file instead of stdout.\n"
+diff --git a/tree.h b/tree.h
+index 3a81684..e74edc4 100644
+--- a/tree.h
++++ b/tree.h
+@@ -113,8 +113,10 @@ struct _info {
+ 
+ /* list.c */
+ struct totals {
+-  u_long files, dirs;
++  u_long files, dirs, hidden;
+   off_t size;
++  time_t newest_time, oldest_time;
++  char newest_name[256], oldest_name[256];
+ };
+ 
+ struct listingcalls {
