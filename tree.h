@@ -113,8 +113,10 @@ struct _info {
 
 /* list.c */
 struct totals {
-  u_long files, dirs;
+  u_long files, dirs, hidden;
   off_t size;
+  time_t newest_time, oldest_time;
+  char newest_name[256], oldest_name[256];
 };
 
 struct listingcalls {

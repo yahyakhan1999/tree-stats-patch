@@ -119,10 +119,18 @@ void emit_tree(char **dirname, bool needfulltree)
     }
     if (needsclosed) lc.close(info, 0, dirname[i+1] != NULL);
 
-    tot.files += subtotal.files;
+   tot.files += subtotal.files;
     tot.dirs += subtotal.dirs;
     tot.size += subtotal.size;
-//     if (duflag) tot.size = info->size;
+    tot.hidden += subtotal.hidden;
+    if (subtotal.newest_time > tot.newest_time) {
+      tot.newest_time = subtotal.newest_time;
+      strncpy(tot.newest_name, subtotal.newest_name, 255);
+    }
+    if (tot.oldest_time == 0 || (subtotal.oldest_time && subtotal.oldest_time < tot.oldest_time)) {
+      tot.oldest_time = subtotal.oldest_time;
+      strncpy(tot.oldest_name, subtotal.oldest_name, 255);
+    }//     if (duflag) tot.size = info->size;
 //     else tot.size += st.st_size;
 
     if (ig != NULL) ig = pop_filterstack();
@@ -131,12 +139,23 @@ void emit_tree(char **dirname, bool needfulltree)
 
   if (!noreport) lc.report(tot);
   if (statsflag) {
+   char newest[32], oldest[32];    struct tm *tm;
     fprintf(outfile, "\n--- Stats ---\n");
     fprintf(outfile, "Directories : %ld\n", tot.dirs);
     fprintf(outfile, "Files       : %ld\n", tot.files);
+    fprintf(outfile, "Hidden      : %ld\n", tot.hidden);
     fprintf(outfile, "Total size  : %lld bytes\n", (long long)tot.size);
-  }
-  
+    if (tot.newest_time) {
+      tm = localtime(&tot.newest_time);
+      strftime(newest, sizeof(newest), "%Y-%m-%d", tm);
+      fprintf(outfile, "Newest file : %s (%s)\n", tot.newest_name, newest);
+    }
+    if (tot.oldest_time) {
+      tm = localtime(&tot.oldest_time);
+      strftime(oldest, sizeof(oldest), "%Y-%m-%d", tm);
+      fprintf(outfile, "Oldest file : %s (%s)\n", tot.oldest_name, oldest);
+    }
+  }  
   lc.outtro();
 }
 
@@ -245,8 +264,18 @@ struct totals listdir(char *dirname, struct _info **dir, int lev, dev_t dev, boo
 	  if (subdir == NULL) descend = 0;
 	}
       }
-    } else tot.files++;
-
+    } else {
+      tot.files++;
+      if ((*dir)->name[0] == '.') tot.hidden++;
+      if (tot.newest_time == 0 || (*dir)->mtime > tot.newest_time) {
+        tot.newest_time = (*dir)->mtime;
+        strncpy(tot.newest_name, (*dir)->name, 255);
+      }
+      if (tot.oldest_time == 0 || (*dir)->mtime < tot.oldest_time) {
+        tot.oldest_time = (*dir)->mtime;
+        strncpy(tot.oldest_name, (*dir)->name, 255);
+      }
+    }
     needsclosed = lc.printfile(dirname, filename, *dir, descend + htmldescend + (Jflag && errors));
     if (err) lc.error(err);
 
