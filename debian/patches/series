@@ -1,3 +1,4 @@
 manpage
 introduce-a-test-framework
 0001-tree-list-call-printinfo-on-error-cases-too.patch
+0001-add-stats-flag.patch

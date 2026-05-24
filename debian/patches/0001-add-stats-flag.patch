@@ -1,0 +1,76 @@
+From: Yahya Khan <yahya.b.khan@gmail.ca>
+Subject: Add --stats flag to display directory statistics
+Bug: https://github.com/yahyakhan1999/tree-stats-patch
+Last-Update: 2026-05-23
+---
+diff --git a/list.c b/list.c
+index 818a3d7..627b072 100644
+--- a/list.c
++++ b/list.c
+@@ -19,7 +19,7 @@
+ 
+ extern bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
+ extern bool Dflag, Hflag, inodeflag, devflag, Rflag, duflag, pruneflag, metafirst;
+-extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks;
++extern bool Jflag, hflag, siflag, noreport, noindent, force_color, xdev, nolinks,statsflag;
+ 
+ extern struct _info **(*getfulltree)(char *d, u_long lev, dev_t dev, off_t *size, char **err);
+ extern int (*topsort)();
+@@ -130,7 +130,13 @@ void emit_tree(char **dirname, bool needfulltree)
+   }
+ 
+   if (!noreport) lc.report(tot);
+-
++  if (statsflag) {
++    fprintf(outfile, "\n--- Stats ---\n");
++    fprintf(outfile, "Directories : %ld\n", tot.dirs);
++    fprintf(outfile, "Files       : %ld\n", tot.files);
++    fprintf(outfile, "Total size  : %lld bytes\n", (long long)tot.size);
++  }
++  
+   lc.outtro();
+ }
+ 
+diff --git a/tree.c b/tree.c
+index 2cf6baf..720c229 100644
+--- a/tree.c
++++ b/tree.c
+@@ -28,7 +28,7 @@ char *hversion= "\t\t tree v2.1.1 %s 1996 - 2023 by Steve Baker and Thomas Moore
+ bool dflag, lflag, pflag, sflag, Fflag, aflag, fflag, uflag, gflag;
+ bool qflag, Nflag, Qflag, Dflag, inodeflag, devflag, hflag, Rflag;
+ bool Hflag, siflag, cflag, Xflag, Jflag, duflag, pruneflag;
+-bool noindent, force_color, nocolor, xdev, noreport, nolinks;
++bool noindent, force_color, nocolor, xdev, noreport, nolinks, statsflag;
+ bool ignorecase, matchdirs, fromfile, metafirst, gitignore, showinfo;
+ bool reverse, fflinks;
+ int flimit;
+@@ -133,7 +133,7 @@ int main(int argc, char **argv)
+ 
+   aflag = dflag = fflag = lflag = pflag = sflag = Fflag = uflag = gflag = FALSE;
+   Dflag = qflag = Nflag = Qflag = Rflag = hflag = Hflag = siflag = cflag = FALSE;
+-  noindent = force_color = nocolor = xdev = noreport = nolinks = reverse = FALSE;
++  noindent = force_color = nocolor = xdev = noreport = nolinks = statsflag = reverse = FALSE;
+   ignorecase = matchdirs = inodeflag = devflag = Xflag = Jflag = fflinks = FALSE;
+   duflag = pruneflag = metafirst = gitignore = FALSE;
+ 
+@@ -381,6 +381,11 @@ int main(int argc, char **argv)
+ 	      noreport = TRUE;
+ 	      break;
+ 	    }
++	    if (!strcmp("--stats",argv[i])) {
++              j = strlen(argv[i])-1;
++              statsflag = TRUE;
++              break;
++            }
+ 	    if (!strcmp("--nolinks",argv[i])) {
+ 	      j = strlen(argv[i])-1;
+ 	      nolinks = TRUE;
+@@ -390,7 +395,7 @@ int main(int argc, char **argv)
+ 	      j = strlen(argv[i])-1;
+ 	      topsort = dirsfirst;
+ 	      break;
+-	    }
++	    } 
+ 	    if (!strcmp("--filesfirst",argv[i])) {
+ 	      j = strlen(argv[i])-1;
+ 	      topsort = filesfirst;
